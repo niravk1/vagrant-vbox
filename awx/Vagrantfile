@@ -1,0 +1,44 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+ENV['VAGRANT_NO_PARALLEL'] = 'yes'
+
+# Box metadata location and box name
+BOX_URL = "https://oracle.github.io/vagrant-projects/boxes"
+BOX_NAME = "oraclelinux/8"
+
+NAME = "awx01"
+HOSTNAME = "awx01.au.oracle.com"
+IPADD = "192.168.56.211"
+VB_GROUP = "awx-lab"
+MEMORY = 4096
+CPUS = 2
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.box = BOX_NAME
+  config.vm.box_url = "#{BOX_URL}/#{BOX_NAME}.json"
+  config.vm.box_check_update = false
+  config.vm.base_mac = nil
+  config.vm.define NAME
+  config.vm.hostname = HOSTNAME  
+  config.vm.network :private_network, ip: IPADD
+  #config.vm.network "forwarded_port", guest: 80, host: 8000
+  config.vm.provision "shell", path: "scripts/awx.sh"
+  config.vm.post_up_message = "Build complete"
+  config.vm.provision "shell", inline: "echo 'INSTALLER: Installation complete'"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
+    vb.cpus = CPUS
+    vb.memory = MEMORY
+    vb.name = NAME
+    vb.customize ["modifyvm", :id, "--groups", "/" + VB_GROUP] 
+    vb.customize ["modifyvm", :id, "--graphicscontroller", "vmsvga"]
+    vb.customize ["modifyvm", :id, "--vram", "128"]
+    vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+    vb.customize ["modifyvm", :id, "--nictype2", "virtio"]
+  end
+end
