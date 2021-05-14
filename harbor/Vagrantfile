@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+# VB Group for the VMs
+GROUP = "/harbor-lab"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.base_mac = nil
+
+# Define harbor - 192.168.56.131 - provision.sh
+
+  config.vm.define "harbor", primary: true do |harbor|
+    harbor.vm.box = "oraclelinux/7"
+    harbor.vm.box_url = "https://oracle.github.io/vagrant-projects/boxes/oraclelinux/7.json"
+    harbor.vm.box_check_update = false
+    harbor.vm.hostname = "harbor.vagrant.vm"
+    harbor.vm.network :private_network, ip: "192.168.56.131"
+    harbor.vm.provision :shell, path: "provision.sh"
+    harbor.vm.post_up_message = "Build complete"
+    harbor.vm.provision "shell", inline: "echo 'INSTALLER: Installation complete, OL Node ready to use!'"
+
+    harbor.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.cpus = 2
+      vb.memory = 4096
+      vb.name = "harbor"
+      vb.customize ["modifyvm", :id, "--groups", GROUP] unless GROUP.nil?
+    end
+  end
+end
